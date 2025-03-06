@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - portainer_data:/data:rw
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.react
+    container_name: dashboard
+    restart: always
+    ports:
+      - "3000:3000"
+  dashboard-spy:
+    build:
+      context: .
+      dockerfile: Dockerfile_spy.react
+    container_name: dashboard-spy
+    restart: always
+    ports:
+      - "3001:3001"
+
+
+volumes:
+  portainer_data:
