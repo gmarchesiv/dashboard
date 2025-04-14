@@ -63,18 +63,9 @@ function App() {
     try {
       const urls = [
  
-        { url: 'http://35.212.31.6:8000', userId: "Augusto Vidaurre" ,etf:"QQQ" },
-       // { url: 'http://35.212.126.197:8000', userId: "Geraldo Arosemena" ,etf:"QQQ" },
-        { url: 'http://35.212.13.140:8000', userId: "Gerardo Yupari" ,etf:"QQQ" },
-       // { url: 'http://35.212.46.199:8000', userId: "Giancarlo Marchesi" ,etf:"QQQ" },
-        { url: 'http://35.212.7.60:8000', userId: "Guillermo Berastain" ,etf:"QQQ" },
-        { url: 'http://35.212.53.107:8000', userId: "Javier Briceño" ,etf:"QQQ" },
-        { url: 'http://35.212.108.83:8000', userId: "Juan Carlos Mandujano" ,etf:"QQQ" },
-        { url: 'http://35.212.44.4:8000', userId: "Orlando Marchesi" ,etf:"QQQ" } ,
-
-
-        { url: 'http://35.212.72.211:8000', userId: "Andres Sotomayor", etf: "QQQ" },
-        // { url: 'http://35.212.36.94:8000', userId: "David Fuchang" ,etf:"QQQ" },
+ 
+        { url: 'http://35.212.46.199:8002', userId: "Giancarlo Marchesi" ,etf:"QQQ" } 
+      
  
         
       ];
@@ -165,7 +156,7 @@ function App() {
  
 
         QQQ: jsonData.price ,
- 
+        VIX:jsonData.vix ,
         DIFSTRIKE: 1,
 
         exchange: jsonData.exchange,
@@ -181,7 +172,15 @@ function App() {
         PICO: (jsonData.pico * 100).toFixed(2),
         downloadUrl: url ,
         TRADES : jsonData.trades,
-        tipo:jsonData.tipo
+        tipo:jsonData.tipo,
+        caida:(jsonData.caida * 100).toFixed(2),
+        RENT_C: (jsonData.rentabilidad_c * 100).toFixed(2),
+        RENT_P: (jsonData.rentabilidad_p * 100).toFixed(2),
+        CANTIDAD_C: jsonData.quantity_call,
+        CANTIDAD_P: jsonData.quantity_put,
+        PRICE_C: jsonData.real_priceBuy_call,
+        PRICE_P: jsonData.real_priceBuy_put,
+        ABS: (jsonData.abs * 100).toFixed(2)
       };
     } catch (error) {
       console.error(`Error fetching data for user ${userId}:`, error);
@@ -226,7 +225,10 @@ function App() {
         paskbid: "-" ,
         exp: "-" ,
         tipo: "-" ,
-     
+        caida: "-" ,
+        RENT_C:  "-" ,
+        RENT_P: "-" ,
+        ABS: "-"  
        
       };
     }
@@ -358,14 +360,7 @@ function App() {
       </Toolbar>
     </AppBarStyled>
         <Container>
-          {/* <TextField
-            label="Buscar usuario"
-            variant="outlined"
-            size="small"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            sx={{ backgroundColor: '#fff', marginBottom: '20px' }} // Añadido margen inferior
-          /> */}
+ 
           <TableContainer component={Paper} sx={{ marginBottom: '20%' }}>
             <Table aria-label="UserData table">
               <TableHead>
@@ -396,12 +391,12 @@ function App() {
                   <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
      padding: '8px' // Ajusta el espacio si es necesario
-  }}>DOCALL</TableCell>
+  }}>ASK/BID</TableCell>
   <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
     borderRight: '1px solid #ccc',
      padding: '8px' // Ajusta el espacio si es necesario
-  }}>ASK/BID</TableCell>
+  }}>RENT-CALL</TableCell>
                   <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
      padding: '8px' // Ajusta el espacio si es necesario
@@ -409,12 +404,12 @@ function App() {
                   <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
      padding: '8px' // Ajusta el espacio si es necesario
-  }}>DOPUT</TableCell>
+  }}>ASK/BID</TableCell>
    <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
     borderRight: '1px solid #ccc',
      padding: '8px' // Ajusta el espacio si es necesario
-  }}>ASK/BID</TableCell>
+  }}>RENT-PUT</TableCell>
                   <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
      padding: '8px' // Ajusta el espacio si es necesario
@@ -429,7 +424,7 @@ function App() {
     fontSize: '0.9rem', // Tamaño del texto más pequeño
     borderRight: '1px solid #ccc',
      padding: '8px' // Ajusta el espacio si es necesario
-  }}>TIPO</TableCell>
+  }}>CAIDA</TableCell>
                   
                   <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
@@ -473,13 +468,13 @@ function App() {
     fontSize: '0.7rem', // Tamaño del texto más pequeño
      // Línea en el lado derecho
     padding: '8px' // Ajusta el espacio si es necesario
-  }}style={{ color: user.DOCALL >= 0 ? 'green' : 'red' }}>{user.DOCALL} %</TableCell>
+  }}style={{ color: user.caskbid >= 3 ? 'red' : 'black' }}>{user.caskbid} %</TableCell>
                     <TableCell align="center"   
                     sx={{
                       fontSize: '0.7rem', // Tamaño del texto más pequeño
                       borderRight: '1px solid #ccc', // Línea en el lado derecho
                       padding: '8px' // Ajusta el espacio si es necesario
-                    }}>{user.caskbid} %</TableCell>
+                    }}  style={{ color: user.RENT_C >= 0 ? 'green' : 'red' }}>{user.RENT_C} %</TableCell>
 
                     <TableCell align="center"  sx={{
     fontSize: '0.7rem', // Tamaño del texto más pequeño
@@ -490,13 +485,13 @@ function App() {
     fontSize: '0.7rem', // Tamaño del texto más pequeño
       // Línea en el lado derecho
     padding: '8px' // Ajusta el espacio si es necesario
-  }} style={{ color: user.DOPUT >= 0 ? 'green' : 'red' }}>{user.DOPUT} %</TableCell>
+  }} style={{ color: user.paskbid >= 3 ? 'red' : 'black' }}>{user.paskbid} %</TableCell>
                     <TableCell align="center"  
                     sx={{
                       fontSize: '0.7rem', // Tamaño del texto más pequeño
                       borderRight: '1px solid #ccc', // Línea en el lado derecho
                       padding: '8px' // Ajusta el espacio si es necesario
-                    }}  >{user.paskbid} %</TableCell>
+                    }}  style={{ color: user.RENT_P >= 0 ? 'green' : 'red' }} >{user.RENT_P} %</TableCell>
                     <TableCell align="center" sx={{
     fontSize: '0.7rem', // Tamaño del texto más pequeño
    // Línea en el lado derecho
@@ -515,7 +510,7 @@ function App() {
                       fontSize: '0.7rem', // Tamaño del texto más pequeño
                       borderRight: '1px solid #ccc', // Línea en el lado derecho
                       padding: '8px' // Ajusta el espacio si es necesario
-                    }}style={{ color: user.tipo == "U" ? 'red' : 'black' }}>{user.tipo}</TableCell>
+                    }} >{user.caida} %</TableCell>
                     <TableCell align="center">
                     <Button
                         variant="contained"
@@ -567,13 +562,17 @@ function App() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="body2">Estado: </Typography>
-                    <Typography variant="body2">Contratos:</Typography>
-                    <Typography variant="body2">Precio:</Typography>
+                    <Typography variant="body2">Contratos CALL:</Typography>
+                    <Typography variant="body2">Precio CALL:</Typography>
+                    <Typography variant="body2">Contratos PUT:</Typography>
+                    <Typography variant="body2">Precio PUT:</Typography>
                   </Box>
                   <Box>
                     <Typography variant="body2">{drawerData.STATUS}</Typography>
-                    <Typography variant="body2">{drawerData.CANTIDAD}</Typography>
-                    <Typography variant="body2">{drawerData.PRICE}$</Typography>
+                    <Typography variant="body2">{drawerData.CANTIDAD_C}</Typography>
+                    <Typography variant="body2">{drawerData.PRICE_C}$</Typography>
+                    <Typography variant="body2">{drawerData.CANTIDAD_P}</Typography>
+                    <Typography variant="body2">{drawerData.PRICE_P}$</Typography>
                   </Box>
                 </Box>
              
@@ -583,12 +582,14 @@ function App() {
                   <Box>
                     {/* <Typography variant="body2">SPY:  </Typography> */}
                     <Typography variant="body2">QQQ: </Typography>
-                    {/* <Typography variant="body2">VIX: </Typography> */}
+                    <Typography variant="body2">VIX: </Typography>
+                    <Typography variant="body2">ABS: </Typography>
                   </Box>
                   <Box>
                     {/* <Typography variant="body2">{drawerData.SPY} $</Typography> */}
                     <Typography variant="body2">{drawerData.QQQ} $</Typography>
-                    {/* <Typography variant="body2">{drawerData.VIX}</Typography> */}
+                    <Typography variant="body2">{drawerData.VIX}</Typography>
+                    <Typography variant="body2">{drawerData.ABS} %</Typography>
                   </Box>
                 </Box>
                 <Divider textAlign="left">OPTIONS</Divider>
