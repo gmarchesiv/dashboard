@@ -73,7 +73,7 @@ function App() {
 
          { url: 'http://35.212.91.124:8001', userId: "Jackie Andren", etf: "SPY" },
         // { url: 'http://35.212.79.208:8001', userId: "Raul Gutierrez ", etf: "SPY" },
-         { url: 'http://35.212.13.140:8001', userId: "Gerardo Yupari", etf: "SPY" },
+        // { url: 'http://35.212.13.140:8001', userId: "Gerardo Yupari", etf: "SPY" },
         // { url: 'http://35.212.7.60:8001', userId: "Guillermo Berastain" ,etf:"SPY" },
          // { url: 'http://35.212.31.6:8001', userId: "Augusto Vidaurre" ,etf:"SPY" },
 // 	{ url: 'http://35.212.36.94:8001', userId: "David Fuchang" ,etf:"SPY" },
