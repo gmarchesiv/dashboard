@@ -11,10 +11,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - portainer_data:/data:rw
 
-  dashboard:
+  dashboard-qqq:
     build:
       context: .
-      dockerfile: Dockerfile.react
+      dockerfile: Dockerfile_qqq.react
     container_name: dashboard
     restart: always
     ports:

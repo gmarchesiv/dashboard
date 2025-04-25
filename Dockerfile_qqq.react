@@ -5,13 +5,13 @@ FROM node:14
 WORKDIR /app
 
 # Copiar el archivo package.json y el archivo package-lock.json
-COPY dashboard/package*.json ./
+COPY dashboard-qqq/package*.json ./
 
 # Instalar las dependencias
 RUN npm install
 
 # Copiar el resto de la aplicación
-COPY dashboard/ .
+COPY dashboard-qqq/ .
 
 # Construir la aplicación
 RUN npm run build

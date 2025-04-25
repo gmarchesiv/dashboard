@@ -179,7 +179,7 @@ function App() {
         caskbid :( jsonData.askbid_call * 100).toFixed(2),
         paskbid: (jsonData.askbid_put * 100).toFixed(2),
         exp:jsonData.exp,
-        
+        CAIDA: (jsonData.caida * 100).toFixed(2),
         MV: mv,
         PICO: (jsonData.pico * 100).toFixed(2),
         downloadUrl: url ,
@@ -229,8 +229,7 @@ function App() {
         paskbid: "-" ,
         exp: "-" ,
         tipo: "-" ,
-     
-       
+        CAIDA: "-" ,
       };
     }
   };
@@ -428,6 +427,12 @@ function App() {
      fontSize: '0.9rem', // Tamaño del texto más pequeño
      padding: '8px' // Ajusta el espacio si es necesario
   }}>MAX</TableCell>
+    <TableCell align="center" sx={{
+
+
+fontSize: '0.9rem', // Tamaño del texto más pequeño
+padding: '8px' // Ajusta el espacio si es necesario
+}}>CAIDA</TableCell>
   <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
     borderRight: '1px solid #ccc',
@@ -511,7 +516,12 @@ function App() {
                    
                       padding: '8px' // Ajusta el espacio si es necesario
                     }}style={{ color: user.PICO >= 0 ? 'green' : 'red' }}>{user.PICO} %</TableCell>
+                          <TableCell align="center"  
+                     sx={{
+                      fontSize: '0.7rem', // Tamaño del texto más pequeño
                    
+                      padding: '8px' // Ajusta el espacio si es necesario
+                    }} >{user.CAIDA} %</TableCell>
 
                    <TableCell align="center"  
                      sx={{

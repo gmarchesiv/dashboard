@@ -173,7 +173,7 @@ function App() {
         downloadUrl: url ,
         TRADES : jsonData.trades,
         tipo:jsonData.tipo,
-        caida:(jsonData.caida * 100).toFixed(2),
+        CAIDA:(jsonData.CAIDA * 100).toFixed(2),
         RENT_C: (jsonData.rentabilidad_c * 100).toFixed(2),
         RENT_P: (jsonData.rentabilidad_p * 100).toFixed(2),
         CANTIDAD_C: jsonData.quantity_call,
@@ -225,7 +225,7 @@ function App() {
         paskbid: "-" ,
         exp: "-" ,
         tipo: "-" ,
-        caida: "-" ,
+        CAIDA: "-" ,
         RENT_C:  "-" ,
         RENT_P: "-" ,
         ABS: "-"  
@@ -510,7 +510,7 @@ function App() {
                       fontSize: '0.7rem', // Tamaño del texto más pequeño
                       borderRight: '1px solid #ccc', // Línea en el lado derecho
                       padding: '8px' // Ajusta el espacio si es necesario
-                    }} >{user.caida} %</TableCell>
+                    }} >{user.CAIDA} %</TableCell>
                     <TableCell align="center">
                     <Button
                         variant="contained"

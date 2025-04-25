@@ -179,6 +179,7 @@ function App() {
         
         MV: mv,
         PICO: (jsonData.pico * 100).toFixed(2),
+        CAIDA: (jsonData.caida * 100).toFixed(2),
         downloadUrl: url ,
         TRADES : jsonData.trades,
         tipo:jsonData.tipo
@@ -226,6 +227,7 @@ function App() {
         paskbid: "-" ,
         exp: "-" ,
         tipo: "-" ,
+        CAIDA: "-" ,
      
        
       };
@@ -426,6 +428,12 @@ function App() {
      padding: '8px' // Ajusta el espacio si es necesario
   }}>MAX</TableCell>
   <TableCell align="center" sx={{
+
+
+fontSize: '0.9rem', // Tamaño del texto más pequeño
+padding: '8px' // Ajusta el espacio si es necesario
+}}>CAIDA</TableCell>
+  <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
     borderRight: '1px solid #ccc',
      padding: '8px' // Ajusta el espacio si es necesario
@@ -509,6 +517,12 @@ function App() {
                       padding: '8px' // Ajusta el espacio si es necesario
                     }}style={{ color: user.PICO >= 0 ? 'green' : 'red' }}>{user.PICO} %</TableCell>
                    
+                   <TableCell align="center"  
+                     sx={{
+                      fontSize: '0.7rem', // Tamaño del texto más pequeño
+                   
+                      padding: '8px' // Ajusta el espacio si es necesario
+                    }} >{user.CAIDA} %</TableCell>
 
                    <TableCell align="center"  
                      sx={{
