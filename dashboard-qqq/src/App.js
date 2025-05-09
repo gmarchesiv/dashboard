@@ -64,7 +64,7 @@ function App() {
       const urls = [
  
         { url: 'http://35.212.31.6:8000', userId: "Augusto Vidaurre" ,etf:"QQQ" },
-       // { url: 'http://35.212.126.197:8000', userId: "Geraldo Arosemena" ,etf:"QQQ" },
+        { url: 'http://35.212.126.197:8000', userId: "Geraldo Arosemena" ,etf:"QQQ" },
         { url: 'http://35.212.13.140:8000', userId: "Gerardo Yupari" ,etf:"QQQ" },
        // { url: 'http://35.212.46.199:8000', userId: "Giancarlo Marchesi" ,etf:"QQQ" },
         { url: 'http://35.212.7.60:8000', userId: "Guillermo Berastain" ,etf:"QQQ" },
