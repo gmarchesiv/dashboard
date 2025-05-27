@@ -1,0 +1,27 @@
+# Establecer la imagen base a una imagen de Node.js
+FROM node:14
+
+# Establecer el directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copiar el archivo package.json y el archivo package-lock.json
+COPY dashboard-qqq-uf/package*.json ./
+
+# Instalar las dependencias
+RUN npm install
+
+# Copiar el resto de la aplicación
+COPY dashboard-qqq-uf/ .
+
+# Construir la aplicación
+RUN npm run build
+
+# Instalar un servidor HTTP estático para servir el contenido estático
+RUN npm install -g serve
+
+# Exponer el puerto en el que la aplicación va a correr
+EXPOSE 3002
+
+# Comando para correr la aplicación
+CMD ["serve", "-s", "build", "-l", "3002"]
+

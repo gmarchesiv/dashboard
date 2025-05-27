@@ -61,25 +61,10 @@ function App() {
 
   const fetchData = async () => {
     try {
-           const urls = [
-
- 
-
-
-        // { url: 'http://35.212.10.69:8001', userId: "Andres Sotomayor", etf: "SPY" },
-          { url: 'http://35.212.105.128:8001', userId: "Carlos Labarthe", etf: "SPY" },
-          { url: 'http://35.212.121.135:8001', userId: "Gloria Velasco", etf: "SPY" },
-         { url: 'http://35.212.49.216:8001', userId: "Karin Granda", etf: "SPY" },
-
-        //  { url: 'http://35.212.91.124:8001', userId: "Jackie Andren", etf: "SPY" },
-        // { url: 'http://35.212.79.208:8001', userId: "Raul Gutierrez ", etf: "SPY" },
-        // { url: 'http://35.212.13.140:8001', userId: "Gerardo Yupari", etf: "SPY" },
-        // { url: 'http://35.212.7.60:8001', userId: "Guillermo Berastain" ,etf:"SPY" },
-         // { url: 'http://35.212.31.6:8001', userId: "Augusto Vidaurre" ,etf:"SPY" },
-// 	{ url: 'http://35.212.36.94:8001', userId: "David Fuchang" ,etf:"SPY" },
-// 	{ url: 'http://35.212.43.136:8001', userId: "Augusto Reyna" ,etf:"SPY" },
-// { url: 'http://35.212.33.64:8001', userId: "Antonio Garcia" ,etf:"SPY" },
-
+      const urls = [
+ { url: 'http://35.212.46.199:8002', userId: "Giancarlo Marchesi" ,etf:"QQQ" } ,
+  { url: 'http://35.212.91.124:8002', userId: "Jackie Andren", etf: "SPY" } 
+        
       ];
       urls.sort((a, b) => {
         if (a.userId < b.userId) {
@@ -167,7 +152,7 @@ function App() {
         PRICE: jsonData.priceBuy,
  
 
-        SPY: jsonData.price ,
+        QQQ: jsonData.price ,
  
         DIFSTRIKE: 1,
 
@@ -179,11 +164,13 @@ function App() {
         caskbid :( jsonData.askbid_call * 100).toFixed(2),
         paskbid: (jsonData.askbid_put * 100).toFixed(2),
         exp:jsonData.exp,
-        CAIDA: (jsonData.caida * 100).toFixed(2),
+        
         MV: mv,
         PICO: (jsonData.pico * 100).toFixed(2),
+        CAIDA: (jsonData.caida * 100).toFixed(2),
         downloadUrl: url ,
         TRADES : jsonData.trades,
+        label: jsonData.label,
         tipo:jsonData.tipo
       };
     } catch (error) {
@@ -207,7 +194,7 @@ function App() {
         LASTCALL: "-",
         LASTPUT: "-",
         SPY: "-",
-        SPY: "-",
+        QQQ: "-",
         VIX: "-",
         D1: "-",
         D2: "-",
@@ -230,6 +217,9 @@ function App() {
         exp: "-" ,
         tipo: "-" ,
         CAIDA: "-" ,
+         label: "-" ,
+     
+       
       };
     }
   };
@@ -420,14 +410,23 @@ function App() {
                   <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
      padding: '8px' // Ajusta el espacio si es necesario
-  }}>RENT</TableCell>
+  }}>LABEL</TableCell>
                   <TableCell align="center" sx={{
 
 
      fontSize: '0.9rem', // Tamaño del texto más pequeño
      padding: '8px' // Ajusta el espacio si es necesario
+  }}>RENT</TableCell>
+
+             <TableCell align="center" sx={{
+
+
+     fontSize: '0.9rem', // Tamaño del texto más pequeño
+     padding: '8px' // Ajusta el espacio si es necesario
   }}>MAX</TableCell>
-    <TableCell align="center" sx={{
+
+
+  <TableCell align="center" sx={{
 
 
 fontSize: '0.9rem', // Tamaño del texto más pequeño
@@ -509,14 +508,26 @@ padding: '8px' // Ajusta el espacio si es necesario
     fontSize: '0.7rem', // Tamaño del texto más pequeño
    // Línea en el lado derecho
     padding: '8px' // Ajusta el espacio si es necesario
-  }} style={{ color: user.RENT >= 0 ? 'green' : 'red' }}>{user.RENT} %</TableCell>
+  }} style={{ color: user.RENT == 1 ? 'green' : 'red' }}>{user.label}</TableCell>
+
+
                     <TableCell align="center"  
                      sx={{
                       fontSize: '0.7rem', // Tamaño del texto más pequeño
                    
                       padding: '8px' // Ajusta el espacio si es necesario
+                    }}style={{ color: user.PICO >= 0 ? 'green' : 'red' }}>{user.RENT} %</TableCell>
+                   
+<TableCell align="center"  
+                     sx={{
+                      fontSize: '0.7rem', // Tamaño del texto más pequeño
+                   
+                      padding: '8px' // Ajusta el espacio si es necesario
                     }}style={{ color: user.PICO >= 0 ? 'green' : 'red' }}>{user.PICO} %</TableCell>
-                          <TableCell align="center"  
+
+
+
+                   <TableCell align="center"  
                      sx={{
                       fontSize: '0.7rem', // Tamaño del texto más pequeño
                    
@@ -595,13 +606,13 @@ padding: '8px' // Ajusta el espacio si es necesario
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Box>
                     {/* <Typography variant="body2">SPY:  </Typography> */}
-                    <Typography variant="body2">SPY: </Typography>
-                    {/* <Typography variant="body2">VIX: </Typography> */}
+                    <Typography variant="body2">QQQ: </Typography>
+                    <Typography variant="body2">VIX: </Typography>
                   </Box>
                   <Box>
                     {/* <Typography variant="body2">{drawerData.SPY} $</Typography> */}
-                    <Typography variant="body2">{drawerData.SPY} $</Typography>
-                    {/* <Typography variant="body2">{drawerData.VIX}</Typography> */}
+                    <Typography variant="body2">{drawerData.QQQ} $</Typography>
+                    <Typography variant="body2">{drawerData.VIX}</Typography>
                   </Box>
                 </Box>
                 <Divider textAlign="left">OPTIONS</Divider>

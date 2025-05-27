@@ -27,11 +27,11 @@ services:
     restart: always
     ports:
       - "3001:3001"
-  dashboard-qqq-hedge:
+  dashboard-qqq-uf:
     build:
       context: .
-      dockerfile: Dockerfile_qqq_hedge.react
-    container_name: dashboard-qqq-hedge
+      dockerfile: Dockerfile_qqq_uf.react
+    container_name: dashboard-qqq-uf
     restart: always
     ports:
       - "3002:3002"
