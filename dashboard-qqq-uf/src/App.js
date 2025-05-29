@@ -508,7 +508,7 @@ padding: '8px' // Ajusta el espacio si es necesario
     fontSize: '0.7rem', // Tamaño del texto más pequeño
    // Línea en el lado derecho
     padding: '8px' // Ajusta el espacio si es necesario
-  }} style={{ color: user.RENT == 1 ? 'green' : 'red' }}>{user.label}</TableCell>
+  }} style={{ color: user.label > 0 ? 'red' : 'green' }}>{user.label}</TableCell>
 
 
                     <TableCell align="center"  
@@ -516,7 +516,7 @@ padding: '8px' // Ajusta el espacio si es necesario
                       fontSize: '0.7rem', // Tamaño del texto más pequeño
                    
                       padding: '8px' // Ajusta el espacio si es necesario
-                    }}style={{ color: user.PICO >= 0 ? 'green' : 'red' }}>{user.RENT} %</TableCell>
+                    }}style={{ color: user.RENT >= 0 ? 'green' : 'red' }}>{user.RENT} %</TableCell>
                    
 <TableCell align="center"  
                      sx={{
