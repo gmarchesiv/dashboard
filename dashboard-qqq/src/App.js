@@ -62,21 +62,15 @@ function App() {
   const fetchData = async () => {
     try {
       const urls = [
- 
-        { url: 'http://35.212.31.6:8000', userId: "Augusto Vidaurre" ,etf:"QQQ" },
-        { url: 'http://35.212.126.197:8000', userId: "Geraldo Arosemena" ,etf:"QQQ" },
+ { url: 'http://35.212.31.6:8000', userId: "Augusto Vidaurre" ,etf:"QQQ" },
         { url: 'http://35.212.13.140:8000', userId: "Gerardo Yupari" ,etf:"QQQ" },
-       // { url: 'http://35.212.46.199:8000', userId: "Giancarlo Marchesi" ,etf:"QQQ" },
+        { url: 'http://35.212.46.199:8000', userId: "Giancarlo Marchesi" ,etf:"QQQ" },
         { url: 'http://35.212.7.60:8000', userId: "Guillermo Berastain" ,etf:"QQQ" },
         { url: 'http://35.212.53.107:8000', userId: "Javier Briceño" ,etf:"QQQ" },
         { url: 'http://35.212.108.83:8000', userId: "Juan Carlos Mandujano" ,etf:"QQQ" },
         { url: 'http://35.212.44.4:8000', userId: "Orlando Marchesi" ,etf:"QQQ" } ,
 
-
-        { url: 'http://35.212.72.211:8000', userId: "Andres Sotomayor", etf: "QQQ" },
-        // { url: 'http://35.212.36.94:8000', userId: "David Fuchang" ,etf:"QQQ" },
- 
-        
+        { url: 'http://35.212.72.211:8000', userId: "Andres Sotomayor" ,etf:"QQQ" }
       ];
       urls.sort((a, b) => {
         if (a.userId < b.userId) {
@@ -182,6 +176,7 @@ function App() {
         CAIDA: (jsonData.caida * 100).toFixed(2),
         downloadUrl: url ,
         TRADES : jsonData.trades,
+        label: jsonData.label,
         tipo:jsonData.tipo
       };
     } catch (error) {
@@ -228,6 +223,7 @@ function App() {
         exp: "-" ,
         tipo: "-" ,
         CAIDA: "-" ,
+         label: "-" ,
      
        
       };
@@ -420,13 +416,22 @@ function App() {
                   <TableCell align="center" sx={{
     fontSize: '0.9rem', // Tamaño del texto más pequeño
      padding: '8px' // Ajusta el espacio si es necesario
-  }}>RENT</TableCell>
+  }}>LABEL</TableCell>
                   <TableCell align="center" sx={{
 
 
      fontSize: '0.9rem', // Tamaño del texto más pequeño
      padding: '8px' // Ajusta el espacio si es necesario
+  }}>RENT</TableCell>
+
+             <TableCell align="center" sx={{
+
+
+     fontSize: '0.9rem', // Tamaño del texto más pequeño
+     padding: '8px' // Ajusta el espacio si es necesario
   }}>MAX</TableCell>
+
+
   <TableCell align="center" sx={{
 
 
@@ -509,14 +514,25 @@ padding: '8px' // Ajusta el espacio si es necesario
     fontSize: '0.7rem', // Tamaño del texto más pequeño
    // Línea en el lado derecho
     padding: '8px' // Ajusta el espacio si es necesario
-  }} style={{ color: user.RENT >= 0 ? 'green' : 'red' }}>{user.RENT} %</TableCell>
+  }} style={{ color: user.label > 0 ? 'red' : 'green' }}>{user.label}</TableCell>
+
+
                     <TableCell align="center"  
                      sx={{
                       fontSize: '0.7rem', // Tamaño del texto más pequeño
                    
                       padding: '8px' // Ajusta el espacio si es necesario
-                    }}style={{ color: user.PICO >= 0 ? 'green' : 'red' }}>{user.PICO} %</TableCell>
+                    }}style={{ color: user.RENT >= 0 ? 'green' : 'red' }}>{user.RENT} %</TableCell>
                    
+<TableCell align="center"  
+                     sx={{
+                      fontSize: '0.7rem', // Tamaño del texto más pequeño
+                   
+                      padding: '8px' // Ajusta el espacio si es necesario
+                    }}style={{ color: user.PICO >= 0 ? 'green' : 'red' }}>{user.PICO} %</TableCell>
+
+
+
                    <TableCell align="center"  
                      sx={{
                       fontSize: '0.7rem', // Tamaño del texto más pequeño
@@ -597,12 +613,12 @@ padding: '8px' // Ajusta el espacio si es necesario
                   <Box>
                     {/* <Typography variant="body2">SPY:  </Typography> */}
                     <Typography variant="body2">QQQ: </Typography>
-                    {/* <Typography variant="body2">VIX: </Typography> */}
+                    <Typography variant="body2">VIX: </Typography>
                   </Box>
                   <Box>
                     {/* <Typography variant="body2">{drawerData.SPY} $</Typography> */}
                     <Typography variant="body2">{drawerData.QQQ} $</Typography>
-                    {/* <Typography variant="body2">{drawerData.VIX}</Typography> */}
+                    <Typography variant="body2">{drawerData.VIX}</Typography>
                   </Box>
                 </Box>
                 <Divider textAlign="left">OPTIONS</Divider>

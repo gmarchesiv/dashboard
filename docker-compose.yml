@@ -27,14 +27,7 @@ services:
     restart: always
     ports:
       - "3001:3001"
-  dashboard-qqq-uf:
-    build:
-      context: .
-      dockerfile: Dockerfile_qqq_uf.react
-    container_name: dashboard-qqq-uf
-    restart: always
-    ports:
-      - "3002:3002"
+ 
 
 volumes:
   portainer_data:
