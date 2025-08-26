@@ -62,14 +62,14 @@ function App() {
   const fetchData = async () => {
     try {
       const urls = [
- { url: 'http://35.212.31.6:8000', userId: "Augusto Vidaurre" ,etf:"QQQ" },
+// { url: 'http://35.212.31.6:8000', userId: "Augusto Vidaurre" ,etf:"QQQ" },
         { url: 'http://35.212.13.140:8000', userId: "Gerardo Yupari" ,etf:"QQQ" },
          { url: 'http://35.212.126.197:8000', userId: "Geraldo Arosemena" ,etf:"QQQ" },
         //{ url: 'http://35.212.46.199:8000', userId: "Giancarlo Marchesi" ,etf:"QQQ" },
         { url: 'http://35.212.7.60:8000', userId: "Guillermo Berastain" ,etf:"QQQ" },
          { url: 'http://35.212.53.107:8000', userId: "Javier Briceño" ,etf:"QQQ" },
        { url: 'http://35.212.108.83:8000', userId: "Juan Carlos Mandujano" ,etf:"QQQ" },
-       { url: 'http://35.212.44.4:8000', userId: "Orlando Marchesi" ,etf:"QQQ" } ,
+       //{ url: 'http://35.212.44.4:8000', userId: "Orlando Marchesi" ,etf:"QQQ" } ,
 
        { url: 'http://35.212.72.211:8000', userId: "Andres Sotomayor" ,etf:"QQQ" }
       ];
