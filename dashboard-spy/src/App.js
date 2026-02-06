@@ -67,11 +67,11 @@ function App() {
         { url: 'http://35.212.91.124:8001', userId: "Jackie Andren" ,etf:"SPY" },
 
         { url: 'http://35.212.49.216:8001', userId: "Karin Granda" ,etf:"SPY" },
- { url: 'http://35.212.33.64:8001', userId: "Antonio Garcia" ,etf:"SPY" },
-        // { url: 'http://35.212.79.208:8001', userId: "Raul Gutierrez " ,etf:"SPY" },
-        { url: 'http://35.212.43.136:8001', userId: "Augusto Reyna" ,etf:"SPY" },
-          { url: 'http://35.212.67.242:8001', userId: "Marissa Chiappe" ,etf:"SPY" },
-        { url: 'http://35.212.36.94:8001', userId: "David Fu Chang" ,etf:"SPY" }
+//  { url: 'http://35.212.33.64:8001', userId: "Antonio Garcia" ,etf:"SPY" },
+//         { url: 'http://35.212.79.208:8001', userId: "Raul Gutierrez " ,etf:"SPY" },
+//         { url: 'http://35.212.43.136:8001', userId: "Augusto Reyna" ,etf:"SPY" },
+//           { url: 'http://35.212.67.242:8001', userId: "Marissa Chiappe" ,etf:"SPY" },
+//         { url: 'http://35.212.36.94:8001', userId: "David Fu Chang" ,etf:"SPY" }
         
       ];
       urls.sort((a, b) => {
