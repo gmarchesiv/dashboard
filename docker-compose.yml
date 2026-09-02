@@ -15,18 +15,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_qqq.react
-    container_name: dashboard
+    container_name: dashboard-qqq
     restart: always
     ports:
       - "3000:3000"
-  dashboard-spy:
-    build:
-      context: .
-      dockerfile: Dockerfile_spy.react
-    container_name: dashboard-spy
-    restart: always
-    ports:
-      - "3001:3001"
+ 
  
 
 volumes:

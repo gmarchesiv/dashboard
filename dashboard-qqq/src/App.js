@@ -1,13 +1,86 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { AppBar, Toolbar, Typography, Container, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Drawer, Box, Divider, CssBaseline, ThemeProvider, createTheme, TextField, IconButton, Menu, MenuItem } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Drawer,
+  Box,
+  Divider,
+  CssBaseline,
+  ThemeProvider,
+  createTheme,
+  IconButton,
+} from '@mui/material';
+
 import { styled } from '@mui/system';
-import './App.css';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 import InfoIcon from '@mui/icons-material/Info';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CloseIcon from '@mui/icons-material/Close';
+
+import './App.css';
 import logo from './logo.jpeg';
+
+
+// ============================================================
+// CONFIGURACIÓN
+// ============================================================
+
+const POLLING_MS = 1000;
+const REQUEST_TIMEOUT_MS = 2500;
+
+
+// ============================================================
+// SERVIDORES
+// ============================================================
+
+const SERVERS = [
+  { url: 'http://35.212.31.6:8000', userId: "Augusto Vidaurre", etf: "QQQ" },
+  { url: 'http://35.212.46.199:8000', userId: "Giancarlo Marchesi", etf: "QQQ" },
+  { url: 'http://35.212.13.140:8000', userId: "Gerardo Yupari", etf: "QQQ" },
+  { url: 'http://35.212.7.60:8000', userId: "Guillermo Berastain", etf: "QQQ" },
+
+  { url: 'http://35.212.44.4:8000', userId: "Orlando Marchesi", etf: "QQQ" },
+  { url: 'http://34.4.44.99:8000', userId: "Renzo Muente", etf: "QQQ" },
+
+
+
+].sort(
+  (a, b) =>
+    a.etf.localeCompare(b.etf) ||
+    a.userId.localeCompare(b.userId)
+);
+
+
+// ============================================================
+// FORMATTER HORA NUEVA YORK
+// ============================================================
+
+const NY_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/New_York',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour12: false,
+});
+
+
+// ============================================================
+// ESTILOS
+// ============================================================
+
 const DrawerBox = styled(Box)({
   width: '300px',
   padding: '20px',
@@ -16,6 +89,11 @@ const DrawerBox = styled(Box)({
 const AppBarStyled = styled(AppBar)({
   marginBottom: '20px',
 });
+
+
+// ============================================================
+// THEME
+// ============================================================
 
 const theme = createTheme({
   palette: {
@@ -26,680 +104,1629 @@ const theme = createTheme({
   },
 });
 
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+const toPercent = (value) => {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return 0;
+  }
+
+  return number * 100;
+};
+
+
+const formatNumber = (value, decimals = 2) => {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return '-';
+  }
+
+  return number.toFixed(decimals);
+};
+
+
+const valueColor = (value) => {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return 'inherit';
+  }
+
+  return number >= 0 ? 'success.main' : 'error.main';
+};
+
+
+const createErrorUser = (server) => ({
+  userId: server.userId,
+  etf: server.etf,
+
+  date: '-',
+  time: '-',
+
+  CASH: null,
+
+  DCALL: null,
+  DPUT: null,
+
+  DOCALL: null,
+  DOPUT: null,
+
+  RENT: null,
+
+  STATUS: 'ERROR',
+
+  CASHDATA: null,
+
+  CANTIDAD: null,
+
+  OPCALL: null,
+  OPPUT: null,
+
+  PRICE: null,
+
+  QQQ: null,
+
+  DIFSTRIKE: null,
+
+  exchange: null,
+
+  callo: null,
+  callc: null,
+
+  puto: null,
+  putc: null,
+
+  caskbid: null,
+  paskbid: null,
+
+  exp: null,
+
+  MV: null,
+
+  PICO: null,
+  CAIDA: null,
+
+  downloadUrl: server.url,
+
+  TRADES: [],
+
+  label: null,
+  tipo: null,
+
+  online: false,
+});
+
+
+// ============================================================
+// COMPONENTE
+// ============================================================
+
 function App() {
+
+  // ==========================================================
+  // STATE
+  // ==========================================================
+
   const [userData, setUserData] = useState([]);
-  const [newYorkDateTime, setNewYorkDateTime] = useState('');
-  const [drawerData, setDrawerData] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  const [newYorkDateTime, setNewYorkDateTime] =
+    useState('');
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const date = new Date();
-      const options = {
-        timeZone: 'America/New_York',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour12: false,
-      };
-      const newYorkTime = new Intl.DateTimeFormat('en-US', options).format(date);
-      setNewYorkDateTime(newYorkTime);
-    }, 1000);
+  const [selectedUserId, setSelectedUserId] =
+    useState(null);
 
-    return () => clearInterval(interval);
-  }, []);
 
-  const fetchData = async () => {
+  // ==========================================================
+  // FETCH DE UNA MÁQUINA
+  // ==========================================================
+
+  const fetchUserData = async (server) => {
+
+    const controller = new AbortController();
+
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, REQUEST_TIMEOUT_MS);
+
+
     try {
-      const urls = [
-  { url: 'http://35.212.31.6:8000', userId: "Augusto Vidaurre" ,etf:"QQQ" },
-        { url: 'http://35.212.13.140:8000', userId: "Gerardo Yupari" ,etf:"QQQ" },
-         { url: 'http://35.212.126.197:8000', userId: "Geraldo Arosemena" ,etf:"QQQ" },
-         { url: 'http://35.212.46.199:8000', userId: "Giancarlo Marchesi" ,etf:"QQQ" },
-        { url: 'http://35.212.7.60:8000', userId: "Guillermo Berastain" ,etf:"QQQ" },
-         { url: 'http://35.212.53.107:8000', userId: "Javier Briceño" ,etf:"QQQ" },
-       { url: 'http://35.212.108.83:8000', userId: "Juan Carlos Mandujano" ,etf:"QQQ" },
-        { url: 'http://35.212.44.4:8000', userId: "Orlando Marchesi" ,etf:"QQQ" } ,
 
-       { url: 'http://35.212.72.211:8000', userId: "Andres Sotomayor" ,etf:"QQQ" },
-       { url: 'http://34.4.38.172:8000', userId: "Alvaro Rodriguez" ,etf:"QQQ" } ,
-       { url: 'http://34.4.44.99:8000', userId: "Renzo Muente" ,etf:"QQQ" } ,
-      ];
-      urls.sort((a, b) => {
-        if (a.userId < b.userId) {
-            return -1; // a va antes que b
+      const response = await fetch(
+        `${server.url}/get-data`,
+        {
+          signal: controller.signal,
+          cache: 'no-store',
         }
-        if (a.userId > b.userId) {
-            return 1; // b va antes que a
-        }
-        return 0; // son iguales
-    });
-    urls.sort((a, b) => {
-      if (a.etf < b.etf) {
-          return -1; // a va antes que b
+      );
+
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP ${response.status}`
+        );
       }
-      if (a.etf > b.etf) {
-          return 1; // b va antes que a
-      }
-      return 0; // son iguales
-  });
-      const dataPromises = urls.map(({ url, userId, downloadUrl }) => fetchUserData(url, userId ));
-      const userData = await Promise.all(dataPromises);
-      setUserData(userData.map(user => ({ ...user, expanded: true })));
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
-
-  const fetchUserData = async (url, userId, downloadUrl) => {
-    try {
-      const response = await fetch(url+"/get-data");
-      const jsonData = await response.json();
-
-      let STATUS;
-      let bid=1;
-      let mv ;
-      
-
-      let time = jsonData.time.split(':').slice(0, 3).join(':').replace(/\.?[0-9]*$/, '') 
-    
-       
-    // Obtener la hora actual de Nueva York
-    const options = {
-      timeZone: 'America/New_York',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    };
-    
-    const newYorkTime = new Intl.DateTimeFormat('en-US', options).format(new Date());
-    
-    // Formatear time y newYorkTime a un formato comparable
-    const [timeHours, timeMinutes, timeSeconds] = time.split(':').map(Number);
-    const [nyHours, nyMinutes, nySeconds] = newYorkTime.split(':').map(Number);
-    
-    // Convertir ambas horas a segundos desde la medianoche
-    const totalSecondsTime = timeHours * 3600 + timeMinutes * 60 + timeSeconds;
-    const totalSecondsNY = nyHours * 3600 + nyMinutes * 60 + nySeconds;
 
 
- 
-     
-      if (( jsonData.quantity)==0){
-        mv=0
-      }else{
-        mv=( jsonData.quantity)*100*bid
-      }
+      const data = await response.json();
+
+
+      // ======================================================
+      // TIME
+      // ======================================================
+
+      const time =
+        typeof data.time === 'string'
+          ? data.time.split('.')[0]
+          : '-';
+
+
+      // ======================================================
+      // MV
+      // ======================================================
+
+      const quantity =
+        Number(data.quantity) || 0;
+
+      const mv =
+        quantity * 100;
+
+
+      // ======================================================
+      // RESULTADO
+      // ======================================================
+
       return {
-        userId: jsonData.name,
-        date: jsonData.date,
-        time:time,
-        CASH: jsonData.wallet.TotalCashValue	,
-        DCALL: (jsonData.dcall* 100).toFixed(2),
-        DPUT: (jsonData.dput * 100).toFixed(2),
-        DOCALL: (jsonData.docall* 100).toFixed(2),
-        DOPUT: (jsonData.doput * 100).toFixed(2),
-        RENT: (jsonData.rentabilidad * 100).toFixed(2),
-        DCALLNumber: 0,
-        STATUS: jsonData.status,
-        CASHDATA: jsonData.wallet,
-        CANTIDAD: jsonData.quantity,
-        OPCALL: jsonData.call_option,
-        OPPUT: jsonData.put_option,
- 
-        PRICE: jsonData.priceBuy,
- 
 
-        QQQ: jsonData.price ,
- 
+        userId:
+          data.name ??
+          server.userId,
+
+        etf:
+          server.etf,
+
+        date:
+          data.date ?? '-',
+
+        time,
+
+
+        // ====================================================
+        // WALLET
+        // ====================================================
+
+        CASH:
+          Number(
+            data.wallet?.TotalCashValue
+          ) || 0,
+
+        CASHDATA:
+          data.wallet ?? null,
+
+
+        // ====================================================
+        // CALL
+        // ====================================================
+
+        DCALL:
+          toPercent(data.dcall),
+
+        DOCALL:
+          toPercent(data.docall),
+
+        caskbid:
+          toPercent(data.askbid_call),
+
+        CASK:
+          data.cask ?? null,
+        CBID:
+          data.cbid ?? null,
+
+        CSTRIKE:
+          data.strike_c ?? null,
+        // ====================================================
+        // PUT
+        // ====================================================
+
+        DPUT:
+          toPercent(data.dput),
+
+        DOPUT:
+          toPercent(data.doput),
+
+        paskbid:
+          toPercent(data.askbid_put),
+
+
+        PASK:
+          data.pask ?? null,
+        PBID:
+          data.pbid ?? null,
+
+        PSTRIKE:
+          data.strike_p ?? null,
+        // ====================================================
+        // RENTABILIDAD
+        // ====================================================
+
+        RENT:
+          toPercent(data.rentabilidad),
+
+
+        // ====================================================
+        // STATUS
+        // ====================================================
+
+        STATUS:
+          data.status ?? '-',
+
+        CANTIDAD:
+          quantity,
+
+
+        // ====================================================
+        // OPTIONS
+        // ====================================================
+
+        OPCALL:
+          data.call_option ?? null,
+
+        OPPUT:
+          data.put_option ?? null,
+
+        PRICE:
+          Number(data.priceBuy) || 0,
+
+
+        // ====================================================
+        // ETF
+        // ====================================================
+
+        QQQ:
+          Number(data.pico_etf) || 0,
+        VIX:
+          Number(data.vix) || 0,
+
+        PERCTICK:
+          Number(toPercent(data.Perc_Tick).toFixed(2)) || 0,
+        // ====================================================
+        // OPTIONS DATA
+        // ====================================================
+
         DIFSTRIKE: 1,
 
-        exchange: jsonData.exchange,
-        callo : jsonData.call_open,
-        callc: jsonData.call_close,
-        puto : jsonData.put_open,
-        putc: jsonData.put_close,
-        caskbid :( jsonData.askbid_call * 100).toFixed(2),
-        paskbid: (jsonData.askbid_put * 100).toFixed(2),
-        exp:jsonData.exp,
-        
-        MV: mv,
-        PICO: (jsonData.pico * 100).toFixed(2),
-        CAIDA: (jsonData.caida * 100).toFixed(2),
-        downloadUrl: url ,
-        TRADES : jsonData.trades,
-        label: jsonData.label,
-        tipo:jsonData.tipo
-      };
-    } catch (error) {
-      console.error(`Error fetching data for user ${userId}:`, error);
-      return {
-        userId: userId,
-        date: '-',
-        time: '-',
-        CASH: '-',
-        DCALL: '-',
-        DPUT: '-',
-        DOCALL:'-',
-        DOPUT: '-',
-        RENT: '-',
-        STATUS: "-",
-        CASHDATA: '-',
-        CANTIDAD: "-",
-        OPCALL: "-",
-        OPPUT: "-",
-        DIFSTRIKE: "-",
-        LASTCALL: "-",
-        LASTPUT: "-",
-        SPY: "-",
-        QQQ: "-",
-        VIX: "-",
-        D1: "-",
-        D2: "-",
-        INDICE: "-",
-        LABEL: "-",
-        PREDICT: "-",
-        PRICE: "-",
-        MV: "-",
-        PICO: "-",
-        downloadUrl: "-",
-        TRADES : "-" ,
 
-        exchange: "-",
-        callo : "-" ,
-        callc: "-",
-        puto : "-" ,
-        putc: "-" ,
-        caskbid : "-" ,
-        paskbid: "-" ,
-        exp: "-" ,
-        tipo: "-" ,
-        CAIDA: "-" ,
-         label: "-" ,
-     
-       
+        callo:
+          data.call_open ?? 0,
+
+        callc:
+          data.call_close ?? 0,
+
+        puto:
+          data.put_open ?? 0,
+
+        putc:
+          data.put_close ?? 0,
+
+        exp:
+          data.exp ?? '-',
+
+
+        // ====================================================
+        // MÉTRICAS
+        // ====================================================
+
+        MV: mv,
+
+        PICO:
+          toPercent(data.pico),
+
+        CAIDA:
+          toPercent(data.caida),
+
+
+        // ====================================================
+        // OTROS
+        // ====================================================
+
+        downloadUrl:
+          server.url,
+
+        n_trades:
+
+          data.n_trades ?? 0,
+
+        cash_init:
+
+          data.money_inicial ?? 0,
+        cash_usar:
+
+          data.money_trades ?? "-",
+        racha:
+
+          data.racha ?? "-",
+
+        label:
+          data.label ?? 0,
+
+        tipo:
+          (data.regla_ant ?? '-').split('_').slice(1).join('_'),
+
+        online: true,
       };
+
+
+    } catch (error) {
+
+      if (error.name !== 'AbortError') {
+
+        console.error(
+          `Error fetching ${server.userId}:`,
+          error
+        );
+
+      }
+
+      return createErrorUser(server);
+
+    } finally {
+
+      clearTimeout(timeoutId);
+
     }
   };
 
-  const handleDrawerOpen = (user) => {
-    setDrawerData(user);
-    setDrawerOpen(true);
+
+  // ==========================================================
+  // FETCH DE TODAS LAS MÁQUINAS
+  // ==========================================================
+
+  const fetchData = async () => {
+
+    try {
+
+      const results = await Promise.all(
+        SERVERS.map((server) =>
+          fetchUserData(server)
+        )
+      );
+
+
+      setUserData(results);
+
+
+    } catch (error) {
+
+      console.error(
+        'Error fetching data:',
+        error
+      );
+
+    }
   };
+
+
+  // ==========================================================
+  // POLLING
+  //
+  // IMPORTANTE:
+  //
+  // No usamos:
+  //
+  // setInterval(fetchData, 1000)
+  //
+  // porque podría comenzar otra ronda mientras
+  // la anterior todavía está ejecutándose.
+  //
+  // ==========================================================
+
+  useEffect(() => {
+
+    let active = true;
+    let timer = null;
+
+
+    const poll = async () => {
+
+      await fetchData();
+
+
+      if (active) {
+
+        timer = setTimeout(
+          poll,
+          POLLING_MS
+        );
+
+      }
+
+    };
+
+
+    poll();
+
+
+    return () => {
+
+      active = false;
+
+      if (timer) {
+        clearTimeout(timer);
+      }
+
+    };
+
+  }, []);
+
+
+  // ==========================================================
+  // RELOJ NUEVA YORK
+  // ==========================================================
+
+  useEffect(() => {
+
+    const updateClock = () => {
+
+      setNewYorkDateTime(
+        NY_DATE_FORMATTER.format(
+          new Date()
+        )
+      );
+
+    };
+
+
+    updateClock();
+
+
+    const timer = setInterval(
+      updateClock,
+      1000
+    );
+
+
+    return () =>
+      clearInterval(timer);
+
+  }, []);
+
+
+  // ==========================================================
+  // DRAWER
+  // ==========================================================
+
+  const drawerData = useMemo(() => {
+
+    if (!selectedUserId) {
+      return null;
+    }
+
+
+    return (
+      userData.find(
+        (user) =>
+          user.userId === selectedUserId
+      ) ?? null
+    );
+
+  }, [
+    userData,
+    selectedUserId,
+  ]);
+
+
+  const handleDrawerOpen = (userId) => {
+
+    setSelectedUserId(userId);
+
+  };
+
 
   const handleDrawerClose = () => {
-    setDrawerOpen(false);
-    setDrawerData(null);
+
+    setSelectedUserId(null);
+
   };
 
-  const filteredData = useMemo(() => {
-    if (!searchTerm) return userData;
-    return userData.filter(user =>
-      user.userId.toLowerCase().includes(searchTerm.toLowerCase())
+
+  // ==========================================================
+  // CSV
+  // ==========================================================
+
+  const downloadCSV = (
+    data,
+    filename
+  ) => {
+
+    if (!data) {
+      return;
+    }
+
+
+    const headers =
+      Object.keys(data);
+
+
+    if (!headers.length) {
+      return;
+    }
+
+
+    const firstColumn =
+      data[headers[0]];
+
+
+    if (!Array.isArray(firstColumn)) {
+      return;
+    }
+
+
+    const numRows =
+      firstColumn.length;
+
+
+    const escapeCSV = (value) => {
+
+      if (
+        value === null ||
+        value === undefined
+      ) {
+        return '';
+      }
+
+
+      const stringValue =
+        String(value);
+
+
+      return `"${stringValue.replaceAll(
+        '"',
+        '""'
+      )}"`;
+
+    };
+
+
+    const rows = [
+
+      headers
+        .map(escapeCSV)
+        .join(','),
+
+      ...Array.from(
+        {
+          length: numRows,
+        },
+        (_, index) =>
+
+          headers
+            .map(
+              (header) =>
+                escapeCSV(
+                  data[header]?.[index]
+                )
+            )
+            .join(',')
+
+      ),
+
+    ];
+
+
+    const csvContent =
+      rows.join('\n');
+
+
+    const blob =
+      new Blob(
+        [csvContent],
+        {
+          type:
+            'text/csv;charset=utf-8;',
+        }
+      );
+
+
+    const blobUrl =
+      URL.createObjectURL(blob);
+
+
+    const link =
+      document.createElement('a');
+
+
+    link.href =
+      blobUrl;
+
+    link.download =
+      filename;
+
+
+    document.body.appendChild(
+      link
     );
-  }, [userData, searchTerm]);
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
+    link.click();
+
+
+    document.body.removeChild(
+      link
+    );
+
+
+    URL.revokeObjectURL(
+      blobUrl
+    );
+
   };
 
-  const downloadCSV = (data, filename) => {
-    const csvRows = [];
-  
-    // Obtener los encabezados del CSV de las claves del objeto
-    const headers = Object.keys(data);
-    csvRows.push(headers.join(','));
-  
-    // Obtener el número de filas a partir del tamaño de cualquier lista en el objeto
-    const numRows = data[headers[0]].length;
-  
-    // Iterar a través de las filas y agregar valores al CSV
-    for (let i = 0; i < numRows; i++) {
-      const row = headers.map(header => data[header][i]);
-      csvRows.push(row.join(','));
-    }
-  
-    // Unir todas las filas con un salto de línea
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', filename);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-  const downloadCSV_historical = (data, filename) => {
-    const csvRows = [];
-  
-    // Obtener los encabezados del CSV de las claves del objeto
-    const headers = Object.keys(data);
-    csvRows.push(headers.join(','));
-  
-    // Obtener el número de filas a partir del tamaño de cualquier lista en el objeto
-    const numRows = data[headers[0]].length;
-  
-    // Iterar a través de las filas y agregar valores al CSV
-    for (let i = 0; i < numRows; i++) {
-      const row = headers.map(header => data[header][i]);
-      csvRows.push(row.join(','));
-    }
-  
-    // Unir todas las filas con un salto de línea
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', filename);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
 
-  const handleDownload = async (url, userId) => {
+  // ==========================================================
+  // DOWNLOAD
+  // ==========================================================
+
+  const handleDownload = async (
+    url,
+    endpoint,
+    filename
+  ) => {
+
     try {
-   
-      const response = await fetch(url+"/transactions");
-      const jsonData = await response.json();
-       
-      downloadCSV(jsonData, `${userId}_transactions.csv`);
-    } catch (error) {
-      console.error(`Error downloading transactions for user ${userId}:`, error);
-    }
-  };
-  const handleDownload_historical = async (url, userId) => {
-    try {
-   
-      const response = await fetch(url+"/daytrade");
-      const jsonData = await response.json();
-       
-      downloadCSV_historical(jsonData, `${userId}_hoy.csv`);
-    } catch (error) {
-      console.error(`Error downloading transactions for user ${userId}:`, error);
-    }
-  };
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
 
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
+      const response =
+        await fetch(
+          `${url}/${endpoint}`,
+          {
+            cache: 'no-store',
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          `HTTP ${response.status}`
+        );
+
+      }
+
+
+      const data =
+        await response.json();
+
+
+      downloadCSV(
+        data,
+        filename
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        `Error downloading ${endpoint}:`,
+        error
+      );
+
+    }
+
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+
+  // ==========================================================
+  // RENDER
+  // ==========================================================
+
   return (
+
     <ThemeProvider theme={theme}>
+
       <CssBaseline />
-      <div>
+
+
       <AppBarStyled position="static">
-      <Toolbar>
-        <Box component="img" src={logo} alt="Logo" sx={{ height: 40, marginRight: '20px' }} />
-        <Typography variant="h6" component="div" sx={{ marginRight: '20px' }}>
-         
-        </Typography>
-        <Typography variant="subtitle1" sx={{ marginLeft: 'auto', marginRight: '10px' }}>
-          Hora de Nueva York: {newYorkDateTime}
-        </Typography>
-      </Toolbar>
-    </AppBarStyled>
-        <Container>
-          {/* <TextField
-            label="Buscar usuario"
-            variant="outlined"
+
+        <Toolbar>
+
+          <Box
+            component="img"
+            src={logo}
+            alt="Logo"
+            sx={{
+              height: 40,
+              marginRight: '20px',
+            }}
+          />
+
+
+          <Typography
+            variant="h6"
+            component="div"
+          />
+
+
+          <Typography
+            variant="subtitle1"
+            sx={{
+              marginLeft: 'auto',
+              marginRight: '10px',
+            }}
+          >
+
+            Hora de Nueva York:{' '}
+
+            {newYorkDateTime}
+
+          </Typography>
+
+        </Toolbar>
+
+      </AppBarStyled>
+
+
+      <Container>
+
+        {/* ==================================================
+            TABLA
+            ================================================== */}
+
+        <TableContainer
+          component={Paper}
+          sx={{
+            marginBottom: '20%',
+            overflowX: 'auto',
+          }}
+        >
+
+          <Table
             size="small"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            sx={{ backgroundColor: '#fff', marginBottom: '20px' }} // Añadido margen inferior
-          /> */}
-          <TableContainer component={Paper} sx={{ marginBottom: '20%' }}>
-            <Table aria-label="UserData table">
-              <TableHead>
-                <TableRow>
-                  <TableCell  sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-    borderRight: '1px solid #ccc', // Línea en el lado derecho
-    padding: '8px' // Ajusta el espacio si es necesario
-  }}  align="center" >USER</TableCell>
-                  <TableCell align="center"
-                  sx={{
-                    fontSize: '0.9rem', // Tamaño del texto más pequeño
-                     padding: '8px' // Ajusta el espacio si es necesario
-                  }}>TIME</TableCell>
-                  <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>STATUS</TableCell>
-                  <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-    borderRight: '1px solid #ccc',
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>CASH</TableCell>
-                   <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>DCALL</TableCell>
-                  <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>DOCALL</TableCell>
-  <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-    borderRight: '1px solid #ccc',
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>ASK/BID</TableCell>
-                  <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>DPUT</TableCell>
-                  <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>DOPUT</TableCell>
-   <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-    borderRight: '1px solid #ccc',
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>ASK/BID</TableCell>
-                  <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>LABEL</TableCell>
-                  <TableCell align="center" sx={{
+            aria-label="UserData table"
+
+            sx={{
+
+              '& .MuiTableCell-root': {
+                textAlign: 'center',
+                padding: '8px',
+              },
+
+              '& .MuiTableHead-root .MuiTableCell-root': {
+                fontSize: '0.9rem',
+                fontWeight: 600,
+              },
+
+              '& .MuiTableBody-root .MuiTableCell-root': {
+                fontSize: '0.7rem',
+              },
+
+            }}
+          >
+
+            {/* ==================================================
+                HEADER
+                ================================================== */}
+
+            <TableHead>
+
+              <TableRow>
+
+                <TableCell>USER</TableCell>
+
+                <TableCell>TIME</TableCell>
+
+                <TableCell>STATUS</TableCell>
+
+                <TableCell>CASH</TableCell>
+
+                <TableCell>DCALL</TableCell>
+
+                <TableCell>DOCALL</TableCell>
+
+                <TableCell>ASK/BID</TableCell>
+
+                <TableCell>DPUT</TableCell>
+
+                <TableCell>DOPUT</TableCell>
+
+                <TableCell>ASK/BID</TableCell>
+
+                <TableCell>LABEL</TableCell>
+
+                <TableCell>RENT</TableCell>
+
+                <TableCell>MAX</TableCell>
+
+                <TableCell>CAIDA</TableCell>
+
+                <TableCell>TIPO</TableCell>
+
+                <TableCell>ACT.</TableCell>
+
+              </TableRow>
+
+            </TableHead>
 
 
-     fontSize: '0.9rem', // Tamaño del texto más pequeño
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>RENT</TableCell>
+            {/* ==================================================
+                BODY
+                ================================================== */}
 
-             <TableCell align="center" sx={{
+            <TableBody>
+
+              {userData.map((user) => (
+
+                <TableRow
+                  key={user.userId}
+                  hover
+                >
+
+                  {/* USER */}
+
+                  <TableCell>
+                    {user.userId}
+                  </TableCell>
 
 
-     fontSize: '0.9rem', // Tamaño del texto más pequeño
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>MAX</TableCell>
+                  {/* TIME */}
+
+                  <TableCell>
+                    {user.time}
+                  </TableCell>
 
 
-  <TableCell align="center" sx={{
+                  {/* STATUS */}
 
-
-fontSize: '0.9rem', // Tamaño del texto más pequeño
-padding: '8px' // Ajusta el espacio si es necesario
-}}>CAIDA</TableCell>
-  <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-    borderRight: '1px solid #ccc',
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>TIPO</TableCell>
-                  
-                  <TableCell align="center" sx={{
-    fontSize: '0.9rem', // Tamaño del texto más pequeño
-    
-     padding: '8px' // Ajusta el espacio si es necesario
-  }}>ACT.</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredData.map((user, index) => (
-                  <TableRow key={index}>
-                    <TableCell align="center"  sx={{
-    fontSize: '0.7rem', // Tamaño del texto más pequeño
-    borderRight: '1px solid #ccc', // Línea en el lado derecho
-    padding: '8px' // Ajusta el espacio si es necesario
-  }}>{user.userId}</TableCell>
-                    <TableCell align="center" sx={{
-    fontSize: '0.7rem', // Tamaño del texto más pequeño
- 
-    padding: '8px' // Ajusta el espacio si es necesario
-  }}>{user.time}</TableCell>
-                    <TableCell align="center" sx={{
-    fontSize: '0.7rem', // Tamaño del texto más pequeño
-    // Línea en el lado derecho
-    padding: '8px' // Ajusta el espacio si es necesario
-  }}>{user.STATUS}</TableCell>
-                    <TableCell align="center"
+                  <TableCell
                     sx={{
-                      fontSize: '0.7rem', // Tamaño del texto más pequeño
-                      borderRight: '1px solid #ccc', // Línea en el lado derecho
-                      padding: '8px' // Ajusta el espacio si es necesario
-                    }}>{user.CASH} $</TableCell>
-                    {/* <TableCell align="center">{user.MV} $</TableCell> */}
+                      color:
+                        user.online
+                          ? 'success.main'
+                          : 'error.main',
+                    }}
+                  >
+                    {user.STATUS}
+                  </TableCell>
 
-                    <TableCell align="center" sx={{
-    fontSize: '0.7rem', // Tamaño del texto más pequeño
-      // Línea en el lado derecho
-    padding: '8px' // Ajusta el espacio si es necesario
-  }} style={{ color: user.DCALL >= 0 ? 'green' : 'red' }}>{user.DCALL} %</TableCell>
-                    <TableCell align="center"  sx={{
-    fontSize: '0.7rem', // Tamaño del texto más pequeño
-     // Línea en el lado derecho
-    padding: '8px' // Ajusta el espacio si es necesario
-  }}style={{ color: user.DOCALL >= 0 ? 'green' : 'red' }}>{user.DOCALL} %</TableCell>
-                    <TableCell align="center"   
+
+                  {/* CASH */}
+
+                  <TableCell>
+
+                    {user.CASH !== null
+                      ? `${formatNumber(
+                        user.CASH,
+                        2
+                      )} $`
+                      : '-'}
+
+                  </TableCell>
+
+
+                  {/* DCALL */}
+
+                  <TableCell
                     sx={{
-                      fontSize: '0.7rem', // Tamaño del texto más pequeño
-                      borderRight: '1px solid #ccc', // Línea en el lado derecho
-                      padding: '8px' // Ajusta el espacio si es necesario
-                    }}>{user.caskbid} %</TableCell>
+                      color:
+                        valueColor(
+                          user.DCALL
+                        ),
+                    }}
+                  >
 
-                    <TableCell align="center"  sx={{
-    fontSize: '0.7rem', // Tamaño del texto más pequeño
-     // Línea en el lado derecho
-    padding: '8px' // Ajusta el espacio si es necesario
-  }} style={{ color: user.DPUT >= 0 ? 'green' : 'red' }}>{user.DPUT} %</TableCell>
-                    <TableCell align="center"  sx={{
-    fontSize: '0.7rem', // Tamaño del texto más pequeño
-      // Línea en el lado derecho
-    padding: '8px' // Ajusta el espacio si es necesario
-  }} style={{ color: user.DOPUT >= 0 ? 'green' : 'red' }}>{user.DOPUT} %</TableCell>
-                    <TableCell align="center"  
+                    {user.DCALL !== null
+                      ? `${formatNumber(
+                        user.DCALL
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
+
+
+                  {/* DOCALL */}
+
+                  <TableCell
                     sx={{
-                      fontSize: '0.7rem', // Tamaño del texto más pequeño
-                      borderRight: '1px solid #ccc', // Línea en el lado derecho
-                      padding: '8px' // Ajusta el espacio si es necesario
-                    }}  >{user.paskbid} %</TableCell>
-                    <TableCell align="center" sx={{
-    fontSize: '0.7rem', // Tamaño del texto más pequeño
-   // Línea en el lado derecho
-    padding: '8px' // Ajusta el espacio si es necesario
-  }} style={{ color: user.label > 0 ? 'red' : 'green' }}>{user.label}</TableCell>
+                      color:
+                        valueColor(
+                          user.DOCALL
+                        ),
+                    }}
+                  >
+
+                    {user.DOCALL !== null
+                      ? `${formatNumber(
+                        user.DOCALL
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
 
 
-                    <TableCell align="center"  
-                     sx={{
-                      fontSize: '0.7rem', // Tamaño del texto más pequeño
-                   
-                      padding: '8px' // Ajusta el espacio si es necesario
-                    }}style={{ color: user.RENT >= 0 ? 'green' : 'red' }}>{user.RENT} %</TableCell>
-                   
-<TableCell align="center"  
-                     sx={{
-                      fontSize: '0.7rem', // Tamaño del texto más pequeño
-                   
-                      padding: '8px' // Ajusta el espacio si es necesario
-                    }}style={{ color: user.PICO >= 0 ? 'green' : 'red' }}>{user.PICO} %</TableCell>
+                  {/* CALL ASK/BID */}
+
+                  <TableCell>
+
+                    {user.caskbid !== null
+                      ? `${formatNumber(
+                        user.caskbid
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
 
 
+                  {/* DPUT */}
 
-                   <TableCell align="center"  
-                     sx={{
-                      fontSize: '0.7rem', // Tamaño del texto más pequeño
-                   
-                      padding: '8px' // Ajusta el espacio si es necesario
-                    }} >{user.CAIDA} %</TableCell>
+                  <TableCell
+                    sx={{
+                      color:
+                        valueColor(
+                          user.DPUT
+                        ),
+                    }}
+                  >
 
-                   <TableCell align="center"  
-                     sx={{
-                      fontSize: '0.7rem', // Tamaño del texto más pequeño
-                      borderRight: '1px solid #ccc', // Línea en el lado derecho
-                      padding: '8px' // Ajusta el espacio si es necesario
-                    }}style={{ color: user.tipo == "U" ? 'red' : 'black' }}>{user.tipo}</TableCell>
-                    <TableCell align="center">
+                    {user.DPUT !== null
+                      ? `${formatNumber(
+                        user.DPUT
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
+
+
+                  {/* DOPUT */}
+
+                  <TableCell
+                    sx={{
+                      color:
+                        valueColor(
+                          user.DOPUT
+                        ),
+                    }}
+                  >
+
+                    {user.DOPUT !== null
+                      ? `${formatNumber(
+                        user.DOPUT
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
+
+
+                  {/* PUT ASK/BID */}
+
+                  <TableCell>
+
+                    {user.paskbid !== null
+                      ? `${formatNumber(
+                        user.paskbid
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
+
+
+                  {/* LABEL */}
+
+                  <TableCell
+                    sx={{
+                      color:
+                        user.label > 0
+                          ? 'error.main'
+                          : 'success.main',
+                    }}
+                  >
+
+                    {user.label ?? '-'}
+
+                  </TableCell>
+
+
+                  {/* RENT */}
+
+                  <TableCell
+                    sx={{
+                      color:
+                        valueColor(
+                          user.RENT
+                        ),
+                      fontWeight: 600,
+                    }}
+                  >
+
+                    {user.RENT !== null
+                      ? `${formatNumber(
+                        user.RENT
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
+
+
+                  {/* MAX / PICO */}
+
+                  <TableCell
+                    sx={{
+                      color:
+                        valueColor(
+                          user.PICO
+                        ),
+                    }}
+                  >
+
+                    {user.PICO !== null
+                      ? `${formatNumber(
+                        user.PICO
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
+
+
+                  {/* CAIDA */}
+
+                  <TableCell>
+
+                    {user.CAIDA !== null
+                      ? `${formatNumber(
+                        user.CAIDA
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
+
+
+                  {/* TIPO */}
+
+                  <TableCell
+                    sx={{
+                      color:
+                        user.tipo === 'U'
+                          ? 'error.main'
+                          : 'inherit',
+                    }}
+                  >
+
+                    {user.tipo ?? '-'}
+
+                  </TableCell>
+
+
+                  {/* INFO */}
+
+                  <TableCell>
+
                     <Button
-                        variant="contained"
-                        onClick={() => handleDrawerOpen(user)}
-                        startIcon={<InfoIcon />}   sx={{
-                          width: 7, // Ancho del botón
-                          height: 25, // Alto del botón (igual que el ancho para hacerlo cuadrado)
-                          borderRadius: 2, // Opcional: para que no tenga bordes redondeados
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >INFO</Button>
-    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Drawer anchor="right" open={drawerOpen} onClose={handleDrawerClose}>
-            {drawerData && (
-              <DrawerBox>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="h6">{drawerData.userId}</Typography>
-                  <IconButton onClick={handleDrawerClose} color="inherit">
-                    <CloseIcon />
-                  </IconButton>
-                </Box>
-                <Divider variant="middle" />
-                <Typography variant="body2">Update at: {drawerData.date} {drawerData.time}</Typography>
-                <Divider textAlign="left">WALLET</Divider>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="body2">AvailableFunds: </Typography>
-                    <Typography variant="body2">NetLiquidation: </Typography>
-                    <Typography variant="body2">SettledCash: </Typography>
-                    <Typography variant="body2">UnrealizedPnL: </Typography>
-                    <Typography variant="body2">TotalCashValue: </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="body2"> {drawerData.CASHDATA.AvailableFunds} $</Typography>
-                    <Typography variant="body2"> {drawerData.CASHDATA.NetLiquidation} $</Typography>
-                    <Typography variant="body2"> {drawerData.CASHDATA.SettledCash} $</Typography>
-                    <Typography variant="body2"> {drawerData.CASHDATA.UnrealizedPnL} $</Typography>
-                    <Typography variant="body2"> {drawerData.CASHDATA.TotalCashValue} $</Typography>
-                  </Box>
-                </Box>
-                <Divider textAlign="left">STATUS</Divider>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="body2">Estado: </Typography>
-                    <Typography variant="body2">Contratos:</Typography>
-                    <Typography variant="body2">Precio:</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="body2">{drawerData.STATUS}</Typography>
-                    <Typography variant="body2">{drawerData.CANTIDAD}</Typography>
-                    <Typography variant="body2">{drawerData.PRICE}$</Typography>
-                  </Box>
-                </Box>
-             
+                      variant="contained"
+                      onClick={() =>
+                        handleDrawerOpen(
+                          user.userId
+                        )
+                      }
+                      startIcon={
+                        <InfoIcon />
+                      }
+                      sx={{
+                        minWidth: 55,
+                        width: 55,
+                        height: 25,
+                        padding: 0,
+                        fontSize: '0.55rem',
+                        borderRadius: 1,
+                      }}
+                    >
+                      INFO
+                    </Button>
 
-                <Divider textAlign="left">ETFs</Divider>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Box>
-                    {/* <Typography variant="body2">SPY:  </Typography> */}
-                    <Typography variant="body2">QQQ: </Typography>
-                    <Typography variant="body2">VIX: </Typography>
-                  </Box>
-                  <Box>
-                    {/* <Typography variant="body2">{drawerData.SPY} $</Typography> */}
-                    <Typography variant="body2">{drawerData.QQQ} $</Typography>
-                    <Typography variant="body2">{drawerData.VIX}</Typography>
-                  </Box>
-                </Box>
-                <Divider textAlign="left">OPTIONS</Divider>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  
-                  <Box>
-                  <Typography variant="body2">Exchange: {drawerData.exchange}</Typography>
-                  <Typography variant="body2">EXP: {drawerData.exp}</Typography>
-        
-                  </Box>
-                
-                  
-                </Box>
-                <Divider/ > 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  
-                  <Box>
-                  <Typography variant="body2">Tipo : CALL</Typography>
-                    <Typography variant="body2">Ask: {drawerData.OPCALL.ask}$</Typography>
-                    <Typography variant="body2">Close Ant.: {drawerData.callc} $</Typography>
-                 
-                  </Box>
-                  <Box>
-                  <Typography variant="body2">Strike: {drawerData.OPCALL.strike}</Typography>
-                  <Typography variant="body2">Bid: {drawerData.OPCALL.bid} $</Typography>
+                  </TableCell>
 
-                    
-                    <Typography variant="body2">Open: {drawerData.callo} $</Typography>
-                  </Box>  
-                  
+                </TableRow>
+
+              ))}
+
+            </TableBody>
+
+          </Table>
+
+        </TableContainer>
+
+
+        {/* ==================================================
+            DRAWER
+            ================================================== */}
+
+        <Drawer
+          anchor="right"
+          open={Boolean(drawerData)}
+          onClose={handleDrawerClose}
+        >
+
+          {drawerData && (
+
+            <DrawerBox>
+
+              {/* ==================================================
+                  HEADER
+                  ================================================== */}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent:
+                    'space-between',
+                  alignItems: 'center',
+                }}
+              >
+
+                <Typography variant="h6">
+                  {drawerData.userId}
+                </Typography>
+
+
+                <IconButton
+                  onClick={
+                    handleDrawerClose
+                  }
+                  color="inherit"
+                >
+
+                  <CloseIcon />
+
+                </IconButton>
+
+              </Box>
+
+
+              <Divider variant="middle" />
+
+
+              <Typography variant="body2">
+
+                Update at:{' '}
+                {drawerData.date}{' '}
+                {drawerData.time}
+
+              </Typography>
+
+
+              {/* ==================================================
+                  WALLET
+                  ================================================== */}
+
+              <Divider textAlign="left">
+                WALLET
+              </Divider>
+
+
+              {drawerData.CASHDATA && (
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent:
+                      'space-between',
+                  }}
+                >
+
+                  <Box>
+                    <Typography variant="body2">
+                      Cash Inicial:
+                    </Typography>
+                    <Typography variant="body2">
+                      AvailableFunds:
+                    </Typography>
+
+                    <Typography variant="body2">
+                      NetLiquidation:
+                    </Typography>
+
+                    <Typography variant="body2">
+                      SettledCash:
+                    </Typography>
+
+
+
+                    <Typography variant="body2">
+                      TotalCashValue:
+                    </Typography>
+
+                  </Box>
+
+
+                  <Box>
+                    <Typography variant="body2">
+                      {drawerData.cash_init}$
+                    </Typography>
+                    <Typography variant="body2">
+                      {
+                        drawerData.CASHDATA
+                          .AvailableFunds
+                      } $
+                    </Typography>
+
+                    <Typography variant="body2">
+                      {
+                        drawerData.CASHDATA
+                          .NetLiquidation
+                      } $
+                    </Typography>
+
+                    <Typography variant="body2">
+                      {
+                        drawerData.CASHDATA
+                          .SettledCash
+                      } $
+                    </Typography>
+
+
+                    <Typography variant="body2">
+                      {
+                        drawerData.CASHDATA
+                          .TotalCashValue
+                      } $
+                    </Typography>
+
+                  </Box>
+
                 </Box>
-                <Divider/ > 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  
+
+              )}
+
+
+              {/* ==================================================
+                  STATUS
+                  ================================================== */}
+
+              <Divider textAlign="left">
+                STATUS
+              </Divider>
+
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent:
+                    'space-between',
+                }}
+              >
+
                 <Box>
-                {/* <Typography variant="body2">Exchange : {drawerData.exchange}</Typography> */}
-                  <Typography variant="body2">Tipo : PUT</Typography>
-                    <Typography variant="body2">Ask: {drawerData.OPPUT.ask}$</Typography>
-                    <Typography variant="body2">Close Ant.: {drawerData.putc} $</Typography>
-                    
- 
-                  </Box>
-                  <Box>
-                  <Typography variant="body2">Strike: {drawerData.OPPUT.strike}</Typography>
-                  <Typography variant="body2">Bid: {drawerData.OPPUT.bid} $</Typography>
 
-                    <Typography variant="body2">Open: {drawerData.puto} $</Typography>
-                  </Box>
-                  
+
+
+                  <Typography variant="body2">
+                    Contratos:
+                  </Typography>
+
+                  <Typography variant="body2">
+                    Precio:
+                  </Typography>
+
                 </Box>
 
-                <Divider textAlign="left">TRADES</Divider>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  
-                  <Box>
-            
-                    <Typography variant="body2">Numero de Trades : </Typography>
-                    <Typography variant="body2"> Dias Restantes : </Typography>
-                  </Box>
-                  <Box>
-                  <Typography variant="body2">{drawerData.TRADES.length }</Typography>
-                  <Typography variant="body2">{drawerData.TRADES.map((trade, index) => (
-                    <span key={index}>
-                        {trade}
-                        {index < drawerData.TRADES.length - 1 && ', '} {/* Añade una coma entre elementos */}
-                    </span>
-                ))}</Typography>
-           
-                  </Box>  
-                  
+
+                <Box>
+
+
+                  <Typography variant="body2">
+                    {drawerData.CANTIDAD}
+                  </Typography>
+
+                  <Typography variant="body2">
+                    {drawerData.PRICE}$
+                  </Typography>
+
                 </Box>
-              </DrawerBox>
-            )}
-          </Drawer>
-        </Container>
-      </div>
+
+              </Box>
+
+
+              {/* ==================================================
+                  ETFs
+                  ================================================== */}
+
+              <Divider textAlign="left">
+                ETFs
+              </Divider>
+
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent:
+                    'space-between',
+                }}
+              >
+
+                <Box>
+
+                  <Typography variant="body2">
+                    QQQ:
+                  </Typography>
+
+                  <Typography variant="body2">
+                    VIX:
+                  </Typography>
+
+                  <Typography variant="body2">
+                    PERC.TICK:
+                  </Typography>
+
+                </Box>
+
+
+                <Box>
+
+                  <Typography variant="body2">
+                    {drawerData.QQQ} $
+                  </Typography>
+
+                  <Typography variant="body2">
+                    {drawerData.VIX}
+                  </Typography>
+
+                  <Typography variant="body2">
+                    {drawerData.PERCTICK} %
+                  </Typography>
+                </Box>
+
+              </Box>
+
+
+              {/* ==================================================
+                  OPTIONS
+                  ================================================== */}
+
+              <Divider textAlign="left">
+                OPTIONS
+              </Divider>
+
+
+
+              <Typography variant="body2">
+                EXP:{' '}
+                {drawerData.exp}
+              </Typography>
+
+
+              <Divider />
+
+
+              {/* ==================================================
+                  CALL
+                  ================================================== */}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent:
+                    'space-between',
+                  marginTop: 1,
+                  marginBottom: 1,
+                }}
+              >
+
+                <Box>
+
+                  <Typography variant="body2">
+                    Tipo: CALL
+                  </Typography>
+
+                  <Typography variant="body2">
+                    Ask:{' '}
+                    {drawerData.CASK}$
+                  </Typography>
+
+                  <Typography variant="body2">
+                    Close Ant.:{' '}
+                    {drawerData.callc ??
+                      '-'} $
+                  </Typography>
+
+
+
+                </Box>
+
+
+                <Box>
+
+                  <Typography variant="body2">
+                    Strike:{' '}
+                    {drawerData.CSTRIKE}
+                  </Typography>
+
+                  <Typography variant="body2">
+                    Bid:{' '}
+                    {drawerData.CBID}$
+                  </Typography>
+                  <Typography variant="body2">
+                    Open:{' '}
+                    {drawerData.callo ??
+                      '-'} $
+                  </Typography>
+
+                </Box>
+
+              </Box>
+
+
+              <Divider />
+
+
+              {/* ==================================================
+                  PUT
+                  ================================================== */}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent:
+                    'space-between',
+                  marginTop: 1,
+                  marginBottom: 1,
+                }}
+              >
+
+                <Box>
+
+                  <Typography variant="body2">
+                    Tipo: PUT
+                  </Typography>
+
+                  <Typography variant="body2">
+                    Ask:{' '}
+                    {drawerData.PASK}$
+                  </Typography>
+
+                  <Typography variant="body2">
+                    Close Ant.:{' '}
+                    {drawerData.putc ??
+                      '-'} $
+                  </Typography>
+
+
+
+                </Box>
+
+
+                <Box>
+
+                  <Typography variant="body2">
+                    Strike:{' '}
+                    {drawerData.PSTRIKE}
+                  </Typography>
+
+                  <Typography variant="body2">
+                    Bid:{' '}
+                    {drawerData.PBID}$
+                  </Typography>
+
+                  <Typography variant="body2">
+                    Open:{' '}
+                    {drawerData.puto ??
+                      '-'} $
+                  </Typography>
+
+                </Box>
+
+              </Box>
+
+
+              {/* ==================================================
+                  TRADES
+                  ================================================== */}
+
+              <Divider textAlign="left">
+                TRADES
+              </Divider>
+
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent:
+                    'space-between',
+                }}
+              >
+
+                <Box>
+
+                  <Typography variant="body2">
+                    Numero de Trades:
+                  </Typography>
+                  <Typography variant="body2">
+                    Racha:
+                  </Typography>
+
+
+
+
+                </Box>
+
+
+                <Box>
+
+                  <Typography variant="body2">
+                    {drawerData.n_trades}
+                  </Typography>
+                  <Typography variant="body2">
+                    {drawerData.racha}
+                  </Typography>
+
+
+                </Box>
+
+
+              </Box>
+
+
+              {/* ==================================================
+                  DOWNLOAD
+                  ================================================== */}
+
+              {/* <Divider
+                sx={{
+                  marginTop: 2,
+                  marginBottom: 2,
+                }}
+              />
+
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 1,
+                  flexDirection: 'column',
+                }}
+              >
+
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    handleDownload(
+                      drawerData.downloadUrl,
+                      'transactions',
+                      `${drawerData.userId}_transactions.csv`
+                    )
+                  }
+                >
+                  Descargar Transactions
+                </Button>
+
+
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    handleDownload(
+                      drawerData.downloadUrl,
+                      'daytrade',
+                      `${drawerData.userId}_hoy.csv`
+                    )
+                  }
+                >
+                  Descargar DayTrade
+                </Button>
+
+              </Box> */}
+
+            </DrawerBox>
+
+          )}
+
+        </Drawer>
+
+      </Container>
+
     </ThemeProvider>
+
   );
 }
+
 
 export default App;
