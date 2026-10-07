@@ -45,14 +45,22 @@ const REQUEST_TIMEOUT_MS = 2500;
 
 const SERVERS = [
   { url: 'http://35.212.31.6:8000', userId: "Augusto Vidaurre", etf: "QQQ" },
-  { url: 'http://35.212.46.199:8000', userId: "Giancarlo Marchesi", etf: "QQQ" },
+  // { url: 'http://35.212.46.199:8000', userId: "Giancarlo Marchesi", etf: "QQQ" },
   { url: 'http://35.212.13.140:8000', userId: "Gerardo Yupari", etf: "QQQ" },
   { url: 'http://35.212.7.60:8000', userId: "Guillermo Berastain", etf: "QQQ" },
 
   { url: 'http://35.212.44.4:8000', userId: "Orlando Marchesi", etf: "QQQ" },
-  { url: 'http://34.4.44.99:8000', userId: "Renzo Muente", etf: "QQQ" },
+  // { url: 'http://34.4.44.99:8000', userId: "Renzo Muente", etf: "QQQ" },
 
+  // { url: 'http://35.212.126.197:8000', userId: "Geraldo Arosemena" ,etf:"QQQ" },
 
+  { url: 'http://35.212.53.107:8000', userId: "Javier Briceño" ,etf:"QQQ" },
+ 
+  { url: 'http://34.48.162.180:8000', userId: "Alberto Necco" ,etf:"QQQ" } ,
+  { url: 'http://35.212.72.211:8000', userId: "Andres Sotomayor" ,etf:"QQQ" },
+
+{ url: 'http://35.212.105.128:8000', userId: "Carlos Labarthe" ,etf:"SPY" } ,
+  { url: 'http://35.212.79.208:8000', userId: "Raul Gutierrez" ,etf:"SPY" },
 
 ].sort(
   (a, b) =>
@@ -156,6 +164,9 @@ const createErrorUser = (server) => ({
 
   DOCALL: null,
   DOPUT: null,
+
+  DOCALL_ACT: null,
+  DOPUT_ACT: null,
 
   RENT: null,
 
@@ -319,6 +330,9 @@ function App() {
         DOCALL:
           toPercent(data.docall),
 
+        DOCALL_ACT:
+          toPercent(data.docall_act),
+
         caskbid:
           toPercent(data.askbid_call),
 
@@ -338,6 +352,9 @@ function App() {
 
         DOPUT:
           toPercent(data.doput),
+
+        DOPUT_ACT:
+          toPercent(data.doput_act),
 
         paskbid:
           toPercent(data.askbid_put),
@@ -926,11 +943,14 @@ function App() {
 
                 <TableCell>DOCALL</TableCell>
 
+                <TableCell>ACT</TableCell>
+
                 <TableCell>ASK/BID</TableCell>
 
                 <TableCell>DPUT</TableCell>
 
                 <TableCell>DOPUT</TableCell>
+                <TableCell>ACT</TableCell>
 
                 <TableCell>ASK/BID</TableCell>
 
@@ -1039,7 +1059,24 @@ function App() {
 
                     {user.DOCALL !== null
                       ? `${formatNumber(
-                        user.DOCALL
+                        user.DOCALL 
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
+
+                  <TableCell
+                    sx={{
+                      color:
+                        valueColor(
+                          user.DOCALL_ACT
+                        ),
+                    }}
+                  >
+
+                    {user.DOCALL_ACT !== null
+                      ? `${formatNumber(
+                        user.DOCALL_ACT
                       )} %`
                       : '-'}
 
@@ -1097,6 +1134,24 @@ function App() {
                       : '-'}
 
                   </TableCell>
+
+                  <TableCell
+                    sx={{
+                      color:
+                        valueColor(
+                          user.DOPUT_ACT
+                        ),
+                    }}
+                  >
+
+                    {user.DOPUT_ACT !== null
+                      ? `${formatNumber(
+                        user.DOPUT_ACT
+                      )} %`
+                      : '-'}
+
+                  </TableCell>
+
 
 
                   {/* PUT ASK/BID */}
